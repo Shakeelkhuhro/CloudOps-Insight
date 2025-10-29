@@ -1,0 +1,19 @@
+groups:
+  - name: cloudops-alerts
+    rules:
+      - alert: HighCPU
+        expr: cloudops_cpu_percent > 80
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected ({{ $labels.instance }})"
+          description: "CPU is above 80% for more than 1 minute."
+      - alert: HighMemory
+        expr: cloudops_memory_percent > 85
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected ({{ $labels.instance }})"
+          description: "Memory is above 85% for more than 1 minute."

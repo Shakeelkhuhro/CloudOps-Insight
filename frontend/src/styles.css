@@ -1,0 +1,54 @@
+body{ font-family: Inter, system-ui, Arial, sans-serif; margin:0; padding:0; background:#f3f6fb; color:#0f172a }
+.container{ max-width:1200px; margin:20px auto; padding:20px; background:linear-gradient(180deg,#ffffff,#fbfdff); box-shadow:0 8px 30px rgba(8,15,52,0.06); border-radius:10px }
+.app-header{ display:flex; justify-content:space-between; align-items:center }
+.app-header h1{ margin:0 }
+.muted{ color:#64748b; margin:4px 0 0 }
+.header-actions{ display:flex; align-items:center; gap:12px }
+.conn{ padding:6px 10px; border-radius:999px; font-size:13px }
+.conn.on{ background:#e6ffed; color:#047857; border:1px solid #bbf7d0 }
+.conn.off{ background:#fff1f2; color:#b91c1c; border:1px solid #fecaca }
+.btn{ padding:8px 12px; background:#2563eb; color:white; border-radius:8px; border:none; cursor:pointer }
+
+.health-row{ display:grid; grid-template-columns: repeat(3,1fr); gap:12px; margin-top:18px }
+.card{ background:white; padding:14px; border-radius:8px; box-shadow:0 6px 18px rgba(11,22,63,0.04) }
+.card-title{ font-size:13px; color:#64748b }
+.card-value{ font-size:20px; font-weight:700; margin-top:8px }
+.health-card.ok .card-value{ color:#047857 }
+.health-card.bad .card-value{ color:#b91c1c }
+
+.summary-row{ display:grid; grid-template-columns: 200px 200px 1fr; gap:12px; margin-top:18px }
+.metric-card .card-value{ font-size:24px }
+.metric-card{ display:flex; align-items:center; justify-content:space-between }
+.metric-card .spark{ margin-left:8px }
+.chart-card{ padding:8px }
+
+.deployments{ margin-top:20px }
+.table-wrap{ overflow:auto; border-radius:8px; background:linear-gradient(180deg,#fff,#fbfdff); padding:8px }
+table{ width:100%; border-collapse:collapse }
+thead th{ text-align:left; padding:10px 12px; color:#475569; font-size:13px }
+tbody td{ padding:12px; border-top:1px solid #eef2ff }
+.pill{ padding:6px 10px; border-radius:999px; font-weight:600; font-size:13px }
+.pill.success{ background:#ecfdf5; color:#047857 }
+.pill.failed{ background:#fff1f2; color:#b91c1c }
+.pill.running{ background:#eff6ff; color:#1d4ed8 }
+
+/* spinner in pill for running state */
+.pill .spinner{ display:inline-block; width:12px; height:12px; margin-left:8px; border-radius:50%; border:2px solid rgba(29,78,216,0.2); border-top-color: rgba(29,78,216,0.9); animation: spin 0.8s linear infinite; vertical-align:middle }
+@keyframes spin{ to { transform: rotate(360deg) } }
+
+/* toast */
+.toast{ position: fixed; right: 20px; bottom: 20px; z-index: 2000 }
+.toast-message{ background: #0f172a; color: white; padding:10px 16px; border-radius:8px; box-shadow: 0 8px 24px rgba(2,6,23,0.15) }
+
+
+.status-success td{ background: linear-gradient(90deg,#f8fff7,#ffffff) }
+.status-failed td{ background: linear-gradient(90deg,#fff7f7,#ffffff) }
+.status-running td{ background: linear-gradient(90deg,#f8fbff,#ffffff) }
+
+@media (max-width:900px){
+	.summary-row{ grid-template-columns: 1fr }
+	.health-row{ grid-template-columns: 1fr }
+}
+.sparkline{ display:block }
+.card .hint{ margin-left:8px; font-size:12px; color:#64748b }
+.card .hint:hover{ color:#0f172a }

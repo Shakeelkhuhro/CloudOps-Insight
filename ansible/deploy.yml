@@ -1,0 +1,19 @@
+- hosts: app
+  become: true
+  tasks:
+    - name: Ensure Docker is installed
+      apt:
+        name: [docker.io, python3-pip]
+        state: present
+
+    - name: Ensure docker-compose is installed
+      pip:
+        name: docker-compose
+
+    - name: Copy compose file
+      copy:
+        src: docker-compose.remote.yml
+        dest: /home/ubuntu/docker-compose.yml
+
+    - name: Start containers
+      shell: docker compose -f /home/ubuntu/docker-compose.yml up -d

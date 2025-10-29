@@ -1,0 +1,12 @@
+node_modules/
+.env
+dist/
+build/
+.terraform/
+*.tfstate
+*.tfstate.backup
+ids_rsa
+ids_rsa.pub
+vault/
+docker-compose.override.yml
+/.vscode/

@@ -1,0 +1,9 @@
+[web]
+# replace with the public IP of the created instance
+# 203.0.113.10 ansible_user=ubuntu
+
+# Example for a single host:
+# 203.0.113.10 ansible_user=ec2-user
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3

@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  loki:
+    image: grafana/loki:2.8.2
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./infra/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+
+  promtail:
+    # override promtail config to send to loki:3100 when running in Linux/WSL2
+    volumes:
+      - ./infra/promtail/config.loki.yml:/etc/promtail/config.yml:ro
+
+volumes:
+  loki_data:

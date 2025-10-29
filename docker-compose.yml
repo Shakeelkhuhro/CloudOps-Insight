@@ -1,0 +1,75 @@
+version: '3.8'
+services:
+  mongo:
+    image: mongo:6
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: cloudops_insight
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URL=mongodb://mongo:27017/cloudops_insight
+    depends_on:
+      - mongo
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  # Optional: Prometheus + Grafana can be uncommented for pro mode
+  # prometheus:
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infra/prometheus/rules.yml:/etc/prometheus/rules.yml:ro
+      - ./infra/alertmanager/config.yml:/etc/alertmanager/config.yml:ro
+    depends_on:
+      - backend
+
+  # grafana:
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/provisioning/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./infra/alertmanager/config.yml:/etc/alertmanager/config.yml:ro
+  # lightweight log receiver for demo (replaces Loki on Windows)
+  logreceiver:
+    build: ./infra/logreceiver
+    ports:
+      - "3101:3101"
+    environment:
+      - PORT=3101
+  promtail:
+    image: grafana/promtail:2.8.2
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/log:/var/log:ro
+      - ./infra/promtail/config.yml:/etc/promtail/config.yml:ro
+    command: -config.file=/etc/promtail/config.yml
+
+volumes:
+  mongo_data:
+  loki_data:

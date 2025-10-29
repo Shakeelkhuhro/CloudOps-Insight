@@ -1,0 +1,15 @@
+{
+  "id": null,
+  "title": "CloudOps Insight - Sample",
+  "panels": [
+    {
+      "type": "graph",
+      "title": "CPU %",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 8 },
+      "targets": [
+        { "expr": "cloudops_cpu_percent", "legendFormat": "CPU" }
+      ]
+    }
+  ],
+  "schemaVersion": 16
+}

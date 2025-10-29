@@ -1,0 +1,64 @@
+---
+# Ansible playbook to deploy the demo stack to a remote VM.
+# Usage:
+# 1. Create an inventory file with your host(s) and 'ansible_user' (example in inventory.example)
+# 2. Ensure you have an SSH key and it is allowed by the instance (the same public key Terraform used)
+# 3. Run: ansible-playbook -i infra/ansible/inventory.example infra/ansible/deploy_vm.yml --private-key ~/.ssh/id_rsa
+
+- name: Deploy demo stack on remote host
+  hosts: web
+  become: yes
+  vars:
+    repo_url: "https://github.com/your-org/your-repo.git"  # change to your repository URL if private use deploy key
+    app_dir: /opt/project
+  tasks:
+    - name: Ensure apt cache updated (Debian/Ubuntu)
+      apt:
+        update_cache: yes
+      when: ansible_os_family == 'Debian'
+
+    - name: Install Docker (Debian/Ubuntu)
+      apt:
+        name: ["docker.io", "git", "docker-compose-plugin"]
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Install Docker (RedHat/CentOS/Amazon)
+      yum:
+        name: ["docker", "git"]
+        state: present
+      when: ansible_os_family == 'RedHat'
+
+    - name: Ensure docker is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add current user to docker group (optional)
+      user:
+        name: "{{ ansible_user | default('ubuntu') }}"
+        groups: docker
+        append: yes
+      ignore_errors: yes
+
+    - name: Clone (or update) repository
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ app_dir }}"
+        version: HEAD
+        force: yes
+
+    - name: Run docker compose up (detached)
+      community.docker.docker_compose:
+        project_src: "{{ app_dir }}"
+        state: present
+        build: no
+
+    - name: Ensure containers are up
+      command: docker ps -a
+      register: docker_ps
+
+    - name: Show containers
+      debug:
+        var: docker_ps.stdout_lines

@@ -1,0 +1,42 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "type": "gauge",
+      "title": "CPU %",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
+      "targets": [ { "expr": "cloudops_cpu_percent", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "percent" } }
+    },
+    {
+      "type": "gauge",
+      "title": "Memory %",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 },
+      "targets": [ { "expr": "cloudops_memory_percent", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "percent" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "CPU and Memory Over Time",
+      "gridPos": { "x": 0, "y": 6, "w": 24, "h": 10 },
+      "targets": [
+        { "expr": "cloudops_cpu_percent", "legendFormat": "CPU" , "refId": "A"},
+        { "expr": "cloudops_memory_percent", "legendFormat": "Memory", "refId": "B" }
+      ]
+    }
+  ],
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": ["cloudops"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "CloudOps Insight - CPU & Memory",
+  "version": 1
+}

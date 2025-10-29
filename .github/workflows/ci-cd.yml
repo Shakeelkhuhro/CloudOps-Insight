@@ -1,0 +1,96 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build backend
+        working-directory: ./backend
+        run: |
+          npm ci
+
+      - name: Build Docker images
+        run: |
+          docker build -t ${{ secrets.DOCKER_REGISTRY }}/cloudops-insight-frontend:ci ./frontend
+          docker build -t ${{ secrets.DOCKER_REGISTRY }}/cloudops-insight-backend:ci ./backend
+
+      - name: Login to Docker registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.DOCKER_REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push images (placeholder - will push if secrets provided)
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_REGISTRY }}/cloudops-insight-frontend:ci
+            ${{ secrets.DOCKER_REGISTRY }}/cloudops-insight-backend:ci
+
+      - name: Terraform plan (placeholder)
+        run: |
+          echo "Terraform plan placeholder - requires provider config and secrets"
+
+      - name: Ansible deploy (placeholder)
+        run: |
+          echo "Ansible deploy placeholder - configure inventory and SSH keys to run"
+
+  deploy-infra:
+    name: Deploy infrastructure (Terraform + Ansible)
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        working-directory: infra/terraform
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: infra/terraform
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply (manual enable)
+        if: ${{ false }}
+        working-directory: infra/terraform
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: terraform apply -auto-approve tfplan
+
+      - name: Run Ansible Playbook (placeholder)
+        if: ${{ false }}
+        uses: dawidd6/action-ansible-playbook@v3
+        with:
+          playbook: infra/ansible/deploy_vm.yml
+          inventory: infra/ansible/inventory.example
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: false
+          PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
