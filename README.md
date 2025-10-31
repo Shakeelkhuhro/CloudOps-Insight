@@ -1,3 +1,58 @@
+# CloudOps Insight
+
+CloudOps Insight is a compact, student-friendly demo that shows an end-to-end deployment and observability workflow.
+
+What it contains
+- React frontend (Vite) showing health, metrics, and realtime charts
+- Node + Express backend exposing REST endpoints and Prometheus metrics (`/metrics`)
+- MongoDB used as a small demo datastore
+- Observability: Prometheus (scrape) and Grafana (provisioned dashboard)
+- Logging: Promtail (pushes logs). Loki is optional (recommended on Linux/WSL2). A Windows-friendly `logreceiver` is provided for local demos
+- Infrastructure templates: Terraform (example) and Ansible playbook to deploy the stack onto a VM
+- CI: GitHub Actions workflow that builds images, runs tests, and includes a guarded deploy-infrastructure scaffold
+
+Quick start (local, Windows-friendly)
+1. From the repository root, build and start the demo stack:
+
+```powershell
+cd "D:\cloud project\project"
+docker compose up --build -d
+```
+
+2. Open the main services:
+- Frontend: http://localhost:3000
+- Backend: http://localhost:5000
+- Prometheus: http://localhost:9090
+- Grafana: check `docker-compose.yml` for the mapped port (commonly 3001)
+
+3. Stop the demo when finished:
+
+```powershell
+docker compose down
+```
+
+Key files and folders
+- `backend/` — server, metrics, Alertmanager webhook receiver
+- `frontend/` — React UI and components
+- `infra/prometheus/`, `infra/grafana/` — monitoring configs and dashboards
+- `infra/promtail/`, `infra/loki/` — logging configs (Loki optional)
+- `infra/logreceiver/` — Windows-friendly log receiver for local demos
+- `infra/terraform/`, `infra/ansible/` — example templates to create a VM and deploy the stack (requires credentials)
+- `.github/workflows/ci-cd.yml` — CI pipeline; deploy steps are scaffolded but disabled by default
+
+Security & cost notes (important for students)
+- Do NOT commit secrets. Use GitHub Actions secrets or environment variables for credentials.
+- Review Terraform templates before running `terraform apply` in a cloud account.
+- Use small instance types (t2.micro/t3.micro) and run `terraform destroy` when finished to avoid charges.
+
+Want to deploy to a cloud provider?
+See `description.md` for a short Option A plan (Terraform + Ansible) and a low-cost AWS Free Tier guide for students.
+
+License
+This project recommends the MIT license. Add or review `LICENSE` as desired.
+
+Contributing
+Contributions welcome. Fork, create a feature branch, run tests, and submit a PR with a description and testing notes.
 # CloudOps-Insight
 
 Multi-tier demo that demonstrates a full DevOps workflow: a React frontend dashboard, Node.js backend APIs, MongoDB storage, Infrastructure-as-Code (Terraform), configuration management (Ansible), CI/CD (GitHub Actions templates) and monitoring (Prometheus + Grafana). The project is intended as a learning playground — everything runs locally with Docker Compose and is easy to extend for real cloud deployments.
