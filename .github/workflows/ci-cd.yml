@@ -7,6 +7,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -28,23 +30,30 @@ jobs:
 
       - name: Build Docker images
         run: |
-          docker build -t ${{ secrets.DOCKER_REGISTRY }}/cloudops-insight-frontend:ci ./frontend
-          docker build -t ${{ secrets.DOCKER_REGISTRY }}/cloudops-insight-backend:ci ./backend
+          # Build with local tags (do not prepend registry here to avoid invalid tag when registry secret is empty)
+          docker build -t cloudops-insight-frontend:ci ./frontend
+          docker build -t cloudops-insight-backend:ci ./backend
 
       - name: Login to Docker registry
+        if: env.DOCKER_REGISTRY != ''
         uses: docker/login-action@v2
         with:
           registry: ${{ secrets.DOCKER_REGISTRY }}
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Push images (placeholder - will push if secrets provided)
-        uses: docker/build-push-action@v4
-        with:
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_REGISTRY }}/cloudops-insight-frontend:ci
-            ${{ secrets.DOCKER_REGISTRY }}/cloudops-insight-backend:ci
+      - name: Push images to registry
+        if: env.DOCKER_REGISTRY != ''
+        run: |
+          echo "Tagging and pushing images to $DOCKER_REGISTRY"
+          docker tag cloudops-insight-frontend:ci $DOCKER_REGISTRY/cloudops-insight-frontend:ci
+          docker tag cloudops-insight-backend:ci $DOCKER_REGISTRY/cloudops-insight-backend:ci
+          docker push $DOCKER_REGISTRY/cloudops-insight-frontend:ci
+          docker push $DOCKER_REGISTRY/cloudops-insight-backend:ci
+
+      - name: Skip push (no registry configured)
+        if: env.DOCKER_REGISTRY == ''
+        run: echo "DOCKER_REGISTRY not set; skipping image push"
 
       - name: Terraform plan (placeholder)
         run: |
