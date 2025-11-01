@@ -13,6 +13,21 @@ What it contains
 
 Quick start (local, Windows-friendly)
 1. From the repository root, build and start the demo stack:
+# CloudOps Insight
+
+CloudOps Insight is a compact, student-friendly demo that shows an end-to-end deployment and observability workflow.
+
+What it contains
+- React frontend (Vite) with realtime charts
+- Node + Express backend exposing REST endpoints and Prometheus metrics (`/metrics`)
+- MongoDB as a small demo datastore
+- Observability: Prometheus (scrape) and Grafana (provisioned dashboard)
+- Logging: Promtail (pushes logs). Loki is optional (recommended on Linux/WSL2). A Windows-friendly `logreceiver` is provided for local demos
+- Infrastructure templates: Terraform (example) and Ansible playbook to deploy the stack onto a VM
+- CI: GitHub Actions workflow that builds images, runs tests, and includes a guarded deploy-infrastructure scaffold
+
+Quick start (local, Windows-friendly)
+1. From the repository root, build and start the demo stack:
 
 ```powershell
 cd "D:\cloud project\project"
@@ -47,16 +62,15 @@ High-level architecture (data & control flows):
 
 ```mermaid
 flowchart LR
-  F[Frontend (React)] -->|API / Socket| B[Backend (Node/Express)]
+  F[Frontend (React)] -->|API-Socket| B[Backend (Node/Express)]
   B -->|reads/writes| DB[(MongoDB)]
-  B -->|/metrics| P[Prometheus]
+  B -->|metrics| P[Prometheus]
   P --> G[Grafana]
   P --> A[Alertmanager]
-  PT[Promtail] --> L[Loki / logreceiver]
+  PT[Promtail] --> L[Loki or logreceiver]
   B --> PT
-  B -->|logs| PT
   CI[GitHub Actions] --> Docker[Docker Registry / Images]
-  CI --> Infra[Terraform + Ansible]
+  CI --> Infra[Terraform & Ansible]
 
   style CI fill:#f9f,stroke:#333,stroke-width:1px
   style Infra fill:#efe,stroke:#333,stroke-width:1px
@@ -65,7 +79,7 @@ flowchart LR
 Diagrams and dashboards
 -----------------------
 
-- The repository includes a Mermaid architecture diagram (`diagrams/architecture.mmd`) and a short explanation here.
+- The repository includes a Mermaid architecture diagram (`diagrams/architecture.mmd`).
 - Grafana provisioning files live under `infra/grafana/provisioning`. You can import the dashboard JSON into Grafana or view the JSON directly.
 
 Security & cost notes (important for students)
@@ -81,23 +95,6 @@ This project recommends the MIT license. Add or review `LICENSE` as desired.
 
 Contributing
 Contributions welcome. Fork, create a feature branch, run tests, and submit a PR with a description and testing notes.
-# CloudOps-Insight
-
-Multi-tier demo that demonstrates a full DevOps workflow: a React frontend dashboard, Node.js backend APIs, MongoDB storage, Infrastructure-as-Code (Terraform), configuration management (Ansible), CI/CD (GitHub Actions templates) and monitoring (Prometheus + Grafana). The project is intended as a learning playground — everything runs locally with Docker Compose and is easy to extend for real cloud deployments.
-
-Highlights
-
-- Realtime metrics via Socket.IO (backend emits metrics and deployment events)
-- Prometheus metrics endpoint exposed from backend (/metrics) and scraping via local Prometheus
-- Grafana provisioned with a sample datasource and dashboard (under infra/grafana)
-- Simulated deployment history stored in MongoDB and viewable/triggerable from the frontend
-- Dockerized services with a ready-to-run `docker-compose.yml`
-
-Contents
-
-```
-CloudOps-Insight/
-├── frontend/              # React (Vite) dashboard, Dockerfile
 ├── backend/               # Node.js + Express API with Socket.IO, Dockerfile
 ├── infra/                 # Terraform examples; prometheus + grafana provisioning
 ├── ansible/               # example Ansible playbooks
