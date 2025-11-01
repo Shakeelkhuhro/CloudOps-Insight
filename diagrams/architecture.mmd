@@ -1,0 +1,35 @@
+flowchart LR
+  subgraph UI
+    F[Frontend (React)]
+  end
+
+  subgraph App
+    B[Backend (Node/Express)]
+    DB[(MongoDB)]
+  end
+
+  subgraph Observability
+    P[Prometheus]
+    G[Grafana]
+    A[Alertmanager]
+  end
+
+  subgraph Logging
+    PT[Promtail]
+    L[Loki / logreceiver]
+  end
+
+  F -->|API / Socket| B
+  B -->|reads/writes| DB
+  B -->|/metrics| P
+  P -->|queries| B
+  G -->|datasource| P
+  P -->|alerts| A
+  A -->|webhook| B
+  PT -->|push| L
+  B -->|logs| PT
+  CI[GitHub Actions] -->|builds| Docker
+  CI -->|optionally: terraform apply| Infra[Terraform + Ansible]
+
+  style CI fill:#f9f,stroke:#333,stroke-width:1px
+  style Infra fill:#efe,stroke:#333,stroke-width:1px

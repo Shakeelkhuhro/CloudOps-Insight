@@ -40,6 +40,55 @@ Key files and folders
 - `infra/terraform/`, `infra/ansible/` — example templates to create a VM and deploy the stack (requires credentials)
 - `.github/workflows/ci-cd.yml` — CI pipeline; deploy steps are scaffolded but disabled by default
 
+Architecture
+-----------
+
+High-level architecture (data & control flows):
+
+```mermaid
+flowchart LR
+	subgraph UI
+		F[Frontend (React)]
+	end
+
+	subgraph App
+		B[Backend (Node/Express)]
+		DB[(MongoDB)]
+	end
+
+	subgraph Observability
+		P[Prometheus]
+		G[Grafana]
+		A[Alertmanager]
+	end
+
+	subgraph Logging
+		PT[Promtail]
+		L[Loki / logreceiver]
+	end
+
+	F -->|API / Socket| B
+	B -->|reads/writes| DB
+	B -->|/metrics| P
+	P -->|queries| B
+	G -->|datasource| P
+	P -->|alerts| A
+	A -->|webhook| B
+	PT -->|push| L
+	B -->|logs| PT
+	CI[GitHub Actions] -->|builds| Docker
+	CI -->|optionally: terraform apply| Infra[Terraform + Ansible]
+
+	style CI fill:#f9f,stroke:#333,stroke-width:1px
+	style Infra fill:#efe,stroke:#333,stroke-width:1px
+```
+
+Diagrams and dashboards
+-----------------------
+
+- The repository includes a Mermaid architecture diagram (`diagrams/architecture.mmd`) and a short explanation here.
+- Grafana provisioning files live under `infra/grafana/provisioning`. You can import the dashboard JSON into Grafana or view the JSON directly.
+
 Security & cost notes (important for students)
 - Do NOT commit secrets. Use GitHub Actions secrets or environment variables for credentials.
 - Review Terraform templates before running `terraform apply` in a cloud account.
