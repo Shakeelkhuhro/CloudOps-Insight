@@ -60,21 +60,9 @@ Architecture
 
 High-level architecture (data & control flows):
 
-```mermaid
-flowchart LR
-  F[Frontend (React)] -->|API-Socket| B[Backend (Node/Express)]
-  B -->|reads/writes| DB[(MongoDB)]
-  B -->|metrics| P[Prometheus]
-  P --> G[Grafana]
-  P --> A[Alertmanager]
-  PT[Promtail] --> L[Loki or logreceiver]
-  B --> PT
-  CI[GitHub Actions] --> Docker[Docker Registry / Images]
-  CI --> Infra[Terraform & Ansible]
+![Architecture diagram](docs/assets/architecture.svg)
 
-  style CI fill:#f9f,stroke:#333,stroke-width:1px
-  style Infra fill:#efe,stroke:#333,stroke-width:1px
-```
+> If the SVG doesn't render in your environment, you can view `docs/assets/architecture.svg` directly or ask me to also add a PNG fallback.
 
 Diagrams and dashboards
 -----------------------
