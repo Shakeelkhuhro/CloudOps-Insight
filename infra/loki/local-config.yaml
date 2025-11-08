@@ -23,12 +23,14 @@ schema_config:
 
 storage_config:
   boltdb_shipper:
-    # For local demo use ephemeral /tmp paths so the container can create them
-    active_index_directory: /tmp/loki/index
-    cache_location: /tmp/loki/cache
+    # Use persistent paths under /loki so the docker volume 'loki_data' can store indexes/chunks
+    active_index_directory: /loki/index
+    cache_location: /loki/cache
     shared_store: filesystem
   filesystem:
-    directory: /tmp/loki/chunks
+    directory: /loki/chunks
 
 limits_config:
   enforce_metric_name: false
+  # Enable volume-backed storage — requires mounting a writable volume at /loki
+  volume_enabled: true
