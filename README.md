@@ -1,65 +1,166 @@
-# CloudOps Insight
+# CloudOps-Insight
 
-CloudOps Insight is a compact, student-friendly demo that shows an end-to-end deployment and observability workflow.
-
-What it contains
-- React frontend (Vite) showing health, metrics, and realtime charts
-# CloudOps Insight
+**CloudOps-Insight** is a compact, student-friendly demo that illustrates a full observability pipeline, including a frontend, backend, metrics collection (Prometheus), dashboards (Grafana), alerting (Alertmanager), and log storage (Loki). It’s designed to bridge theory with practical cloud operations by simulating real-world DevOps practices in a safe, low-cost environment.
 
 ![Architecture diagram](docs/assets/architecture.png)
 
----
 
-This README intentionally shows only the official architecture image. See the repository for full configs and examples.
-	 - Run Loki with an alternate, single-process demo config (non-persistent) and accept that logs won't be persisted across restarts.
+## Configured Services
 
-How to test alerts locally
+| Service      | Technology            | Host Port | Notes                                                                    |
+| ------------ | --------------------- | --------- | ------------------------------------------------------------------------ |
+| Frontend     | React (Vite)          | 3000      | Dashboard with system health, metrics, and live updates                  |
+| Backend      | Node.js + Express     | 5000      | Exposes `/metrics` for Prometheus scraping                               |
+| Prometheus   | Prometheus            | 9090      | Collects metrics from backend and other services                         |
+| Grafana      | Grafana               | 3001      | Pre-configured dashboards and data sources                               |
+| Alertmanager | Alertmanager          | 9093      | Handles alerts from Prometheus                                           |
+| Logs         | logreceiver (Windows) | 3101      | Loki stack for persistent logging via `docker-compose.loki.yml` |
 
-1. Trigger the Prometheus test rule (or temporarily lower rule thresholds in `infra/prometheus/rules.yml`) and reload Prometheus:
+The repository auto-provisions a Prometheus data source and sample dashboards into Grafana (`infra/grafana/provisioning`).
 
-```powershell
-# reload Prometheus (if curl not available in container, send HUP):
-docker compose exec -T prometheus kill -HUP 1
 
-# then check alerts API
-Invoke-RestMethod -Uri 'http://localhost:9090/api/v1/alerts' | ConvertTo-Json -Depth 4
-```
 
-2. Alertmanager will POST the alert JSON to the backend at `POST http://backend:5000/api/alerts` (inside docker network) which logs the payload. You can also view Alertmanager UI at http://localhost:9093.
+## Quick Start — Demo (Windows-friendly)
 
-How to enable persistent Loki storage (recommended for production/demo on Linux)
-
-1. Create a local directory (or named volume) on a Linux host and mount it in `docker-compose.yml` under the `loki` service as `/loki`.
-2. Ensure the directory is writable by the container (chown/chmod) or use a Docker named volume.
-3. Restart Loki and Promtail:
+1. Start the demo stack (without Loki):
 
 ```powershell
-docker compose up -d loki promtail
-docker compose logs loki --tail 100
+docker compose up -d
 ```
 
-If you want, I can attempt a non-persistent in-container Loki that avoids the WAL (demo-only) or help you set up Loki inside WSL2 where it runs reliably. Tell me which you prefer and I'll continue.
+2. Open services in your browser:
 
-### How to start the full Loki stack (WSL2 / Linux)
+```powershell
+Start-Process "http://localhost:3000"   # Frontend
+Start-Process "http://localhost:3001"   # Grafana
+Start-Process "http://localhost:9090"   # Prometheus
+Start-Process "http://localhost:9093"   # Alertmanager
+```
 
-If you have WSL2 or a Linux host, use the provided docker-compose override to enable Loki and persistent storage. From the project root run:
+3. View logs (using the Windows demo `logreceiver`):
 
-```bash
-# start full stack with Loki + Promtail pushing to Loki
+```powershell
+docker compose logs -f logreceiver
+```
+
+
+## Enabling Loki (Optional, Recommended on WSL2/Linux)
+
+Loki provides persistent log storage and integrates with Grafana.
+
+1. Start the full observability stack with Loki:
+
+**Option A: PowerShell convenience script**
+
+```powershell
+.\scripts\start-with-loki.ps1 -Build
+```
+
+**Option B: Docker Compose override**
+
+```powershell
 docker compose -f docker-compose.yml -f docker-compose.loki.yml up -d --build
 ```
 
 Notes:
-- The override file `docker-compose.loki.yml` mounts `infra/loki/local-config.yaml` and creates a named volume `loki_data` for persistence.
-- Promtail will use `infra/promtail/config.loki.yml` (override) which points to `http://loki:3100`.
 
-### If you are on Windows and prefer the quick demo
+* The override defines the `loki` service and mounts a named volume (`loki_data:/loki`) for WAL, index, and chunk storage.
+* Promtail is configured (`infra/promtail/config.loki.yml`) to send logs to `http://loki:3100`.
+* Grafana is auto-provisioned with a Loki data source (`infra/grafana/provisioning/datasources/loki-datasource.yaml`), so dashboards and Explore queries are ready.
 
-I replaced Loki with a lightweight `logreceiver` service for Windows local demos. It accepts Promtail's push API and prints samples to its container logs. Use the default `docker-compose.yml` (no override) to run the demo logging stack:
+
+## Useful Commands
 
 ```powershell
-docker compose up -d
-docker compose logs -f logreceiver
+# Check running containers and ports
+docker compose ps
+
+# Show Grafana logs (helpful for provisioning messages)
+docker compose logs grafana --tail 200 -f
+
+# Check Loki readiness (if enabled)
+Invoke-RestMethod -Uri 'http://localhost:3100/ready' -UseBasicParsing
+
+# Inspect Loki data on the container
+docker compose exec loki sh -c "du -sh /loki || ls -la /loki"
 ```
 
-This keeps the demo simple and Windows-friendly while still showing how logs flow from Promtail into a receiver.
+
+
+## Dashboards & Datasources
+
+Grafana provisioning is under `infra/grafana/provisioning`:
+
+* `datasources/datasources.yaml` — Prometheus datasource (auto-provisioned)
+* `datasources/loki-datasource.yaml` — Loki datasource (auto-provisioned when Loki is enabled)
+* `dashboards/*.json` — Pre-built dashboards imported automatically on startup
+
+
+## Testing Alerts and Metrics
+
+* Trigger Prometheus test rules or adjust thresholds in `infra/prometheus/rules.yml`.
+* Reload Prometheus inside the container:
+
+```powershell
+docker compose exec -T prometheus kill -HUP 1
+```
+
+* Check alerts via API:
+
+```powershell
+Invoke-RestMethod -Uri 'http://localhost:9090/api/v1/alerts' | ConvertTo-Json -Depth 4
+```
+
+
+## Architecture & Implementation
+
+**Frontend:** React + Vite dashboards
+
+![Frontend 1](docs/assets/frontend1.png)
+![Frontend 2](docs/assets/frontend2.png)
+
+**Backend:** Node.js + Express REST APIs
+
+![Backend 1](docs/assets/backend1.png)
+![Backend 2](docs/assets/backend2.png)
+![Backend API](docs/assets/backendAPI.png)
+
+**Prometheus:** Metrics collection
+
+![Prometheus](docs/assets/prometheus.png)
+
+**Grafana:** Dashboards & visualizations
+
+![Grafana 1](docs/assets/grafana1.png)
+![Grafana 2](docs/assets/grafana2.png)
+![Grafana 3](docs/assets/grafana3.png)
+![Grafana 4](docs/assets/grafana4.png)
+
+**Loki:** Log aggregation
+
+![Loki](docs/assets/loki.png)
+
+
+## Features
+
+* Fully containerized: each service in its own Docker container
+* Cloud-ready deployment with Terraform & Ansible
+* Observability built-in: metrics, logs, dashboards
+* CI/CD simulation with GitHub Actions
+* Scalable design for additional microservices
+* Security considerations: environment variables and secrets used for configuration
+
+
+## Access
+
+| Service      | URL                                            |
+| ------------ | ---------------------------------------------- |
+| Frontend     | [http://localhost:3000](http://localhost:3000) |
+| Backend      | [http://localhost:5000](http://localhost:5000) |
+| Prometheus   | [http://localhost:9090](http://localhost:9090) |
+| Grafana      | [http://localhost:3001](http://localhost:3001) |
+| Alertmanager | [http://localhost:9093](http://localhost:9093) |
+
+
+
+CloudOps-Insight demonstrates **core DevOps principles** including automated deployment, monitoring, log aggregation, alerting, and observability using cloud-native technologies.
